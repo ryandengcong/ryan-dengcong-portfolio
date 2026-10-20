@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#7286a5"/><stop offset="1" stop-color="#bcc9db"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="0" dy="25" stdDeviation="30" flood-color="#233348" flood-opacity=".28"/></filter>
+    <clipPath id="window"><rect x="115" y="130" width="970" height="552" rx="13"/></clipPath>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <circle cx="1080" cy="60" r="430" fill="#dfe8f5" opacity=".13"/>
+  <circle cx="100" cy="820" r="400" fill="#536988" opacity=".15"/>
+  <rect x="115" y="130" width="970" height="552" rx="13" fill="#fcfcfd" filter="url(#shadow)"/>
+  <g clip-path="url(#window)" font-family="Arial,sans-serif">
+    <rect x="115" y="130" width="970" height="36" fill="#fafafa"/>
+    <circle cx="134" cy="148" r="4" fill="#e3b1aa"/><circle cx="148" cy="148" r="4" fill="#e8d69a"/><circle cx="162" cy="148" r="4" fill="#b0c8b0"/>
+    <rect x="485" y="139" width="230" height="17" rx="5" fill="#eeeeef"/>
+    <text x="558" y="151" font-size="8" fill="#8c8f99">forma.workspace</text>
+    <rect x="115" y="167" width="178" height="515" fill="#f4f5f7"/>
+    <path d="M140 192h11v11h-11zm14 0h11v11h-11zm-14 14h11v11h-11z" fill="#3b4b6c"/>
+    <text x="175" y="212" fill="#232c3e" font-size="23" font-weight="700" letter-spacing="-1">forma</text>
+    <rect x="130" y="243" width="148" height="27" rx="5" fill="#e9ebef"/>
+    <text x="146" y="260" fill="#7f8491" font-size="9">⌕  Search anything...</text>
+    <text x="139" y="305" fill="#9299a4" font-size="7" letter-spacing="1.5">WORKSPACE</text>
+    <rect x="130" y="318" width="148" height="33" rx="5" fill="#dfe6f2"/>
+    <rect x="142" y="329" width="10" height="10" rx="2" fill="#6b82ab"/>
+    <text x="163" y="339" fill="#3d5479" font-size="10" font-weight="600">Overview</text>
+    <g fill="#7e8593" font-size="10"><text x="163" y="378">My projects</text><text x="163" y="414">My tasks</text><text x="163" y="450">Team members</text><text x="163" y="486">Calendar</text></g>
+    <g fill="none" stroke="#9299a8" stroke-width="1.5"><rect x="142" y="368" width="11" height="10" rx="2"/><rect x="142" y="404" width="11" height="10" rx="2"/><circle cx="147" cy="442" r="5"/><rect x="142" y="476" width="11" height="10" rx="2"/></g>
+    <rect x="130" y="599" width="148" height="61" rx="7" fill="#eceef2"/>
+    <circle cx="151" cy="629" r="12" fill="#becbdd"/><text x="146" y="632" fill="#425777" font-size="8">JD</text>
+    <text x="173" y="626" fill="#444d5b" font-size="9">Jamie Davis</text><text x="173" y="642" fill="#8c92a0" font-size="7">Personal workspace</text>
+    <text x="326" y="214" fill="#9b9eaa" font-size="9">Workspace / Overview</text>
+    <text x="326" y="259" fill="#282e3b" font-size="25" font-weight="600" letter-spacing="-.8">A little clarity. A lot of progress.</text>
+    <text x="326" y="281" fill="#9196a2" font-size="10">Here's what’s happening in your workspace today.</text>
+    <rect x="941" y="237" width="110" height="31" rx="5" fill="#354b70"/><text x="956" y="257" fill="#fff" font-size="9">+  New project</text>
+    <g fill="#fff" stroke="#e8eaf0"><rect x="326" y="309" width="227" height="95" rx="7"/><rect x="571" y="309" width="227" height="95" rx="7"/><rect x="816" y="309" width="235" height="95" rx="7"/></g>
+    <g font-size="9" fill="#8d93a0"><text x="344" y="335">ACTIVE PROJECTS</text><text x="589" y="335">TASKS COMPLETED</text><text x="834" y="335">TEAM PRODUCTIVITY</text></g>
+    <g font-size="29" fill="#2b3445"><text x="344" y="380">08</text><text x="589" y="380">24</text><text x="834" y="380">92<tspan font-size="15">%</tspan></text></g>
+    <g fill="#608871" font-size="8"><text x="402" y="376">+2 this month</text><text x="647" y="376">12 this week</text><text x="904" y="376">↑ 8.2%</text></g>
+    <text x="326" y="443" fill="#384150" font-size="15" font-weight="600">Your projects</text>
+    <text x="991" y="442" fill="#8c95a5" font-size="9">View all →</text>
+    <g fill="#fff" stroke="#e7eaf0"><rect x="326" y="463" width="227" height="177" rx="7"/><rect x="571" y="463" width="227" height="177" rx="7"/><rect x="816" y="463" width="235" height="177" rx="7"/></g>
+    <rect x="342" y="480" width="27" height="27" rx="6" fill="#e8eef8"/><path d="m350 499 6-12 6 12z" fill="#7186aa"/>
+    <rect x="587" y="480" width="27" height="27" rx="6" fill="#f2eae2"/><rect x="595" y="488" width="11" height="11" rx="2" fill="#a98a6c"/>
+    <rect x="832" y="480" width="27" height="27" rx="6" fill="#e9e8f3"/><circle cx="846" cy="494" r="6" fill="#8a80ad"/>
+    <g fill="#3b4453" font-size="12" font-weight="600"><text x="342" y="531">Website redesign</text><text x="587" y="531">Brand identity</text><text x="832" y="531">Mobile experience</text></g>
+    <g fill="#9b9fab" font-size="8"><text x="342" y="550">Design that moves us forward.</text><text x="587" y="550">A new way to tell our story.</text><text x="832" y="550">Made for life on the move.</text></g>
+    <g fill="#eceef3"><rect x="342" y="571" width="194" height="4" rx="2"/><rect x="587" y="571" width="194" height="4" rx="2"/><rect x="832" y="571" width="201" height="4" rx="2"/></g>
+    <rect x="342" y="571" width="142" height="4" rx="2" fill="#8399bd"/><rect x="587" y="571" width="84" height="4" rx="2" fill="#baa18a"/><rect x="832" y="571" width="160" height="4" rx="2" fill="#a29ac2"/>
+    <g fill="#d1dceb" stroke="white" stroke-width="2"><circle cx="351" cy="611" r="10"/><circle cx="365" cy="611" r="10"/><circle cx="379" cy="611" r="10"/><circle cx="596" cy="611" r="10"/><circle cx="610" cy="611" r="10"/><circle cx="841" cy="611" r="10"/><circle cx="855" cy="611" r="10"/></g>
+    <g fill="#969dab" font-size="8"><text x="478" y="614">12 tasks</text><text x="729" y="614">8 tasks</text><text x="978" y="614">16 tasks</text></g>
+  </g>
+</svg>
