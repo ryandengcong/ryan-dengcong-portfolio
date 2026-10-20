@@ -19,14 +19,28 @@ export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
   const [visible, setVisible] = useState(true)
   const [tabVisible, setTabVisible] = useState(true)
   const art = useRef<HTMLDivElement>(null)
+  const pointerTarget = useRef({ x: 0, y: 0 })
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
     if (art.current) observer.observe(art.current)
     const onVisibilityChange = () => setTabVisible(!document.hidden)
+    const element = art.current
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const onPointerMove = (event: PointerEvent) => {
+      if (!finePointer.matches || event.pointerType === 'touch' || !element) return
+      const bounds = element.getBoundingClientRect()
+      pointerTarget.current.x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2))
+      pointerTarget.current.y = Math.max(-1, Math.min(1, (0.5 - (event.clientY - bounds.top) / bounds.height) * 2))
+    }
+    const onPointerLeave = () => { pointerTarget.current.x = 0; pointerTarget.current.y = 0 }
     onVisibilityChange()
+    element?.addEventListener('pointermove', onPointerMove, { passive: true })
+    element?.addEventListener('pointerleave', onPointerLeave, { passive: true })
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
       observer.disconnect()
+      element?.removeEventListener('pointermove', onPointerMove)
+      element?.removeEventListener('pointerleave', onPointerLeave)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [])
@@ -39,7 +53,7 @@ export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
       <div className="sculpture-canvas" role="img" aria-label="An abstract, polished silver knot sculpture. Decorative 3D artwork.">
         <SculptureBoundary>
           <Suspense fallback={<Placeholder />}>
-            <Sculpture reducedMotion={reducedMotion || paused || !visible || !tabVisible} />
+            <Sculpture reducedMotion={reducedMotion || paused || !visible || !tabVisible} pointerTarget={pointerTarget} />
           </Suspense>
         </SculptureBoundary>
       </div>

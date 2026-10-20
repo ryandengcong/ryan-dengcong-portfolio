@@ -1,38 +1,76 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Environment, Lightformer } from '@react-three/drei'
 import * as THREE from 'three'
 
-function Knot({ reducedMotion }: { reducedMotion: boolean }) {
+type PointerTarget = { x: number; y: number }
+
+function Knot({ reducedMotion, pointerTarget, keyLight }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget>; keyLight: RefObject<THREE.DirectionalLight | null> }) {
   const group = useRef<THREE.Group>(null)
   const knot = useRef<THREE.Mesh>(null)
+  const reflections = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 512
+    const context = canvas.getContext('2d')
+    if (!context) return null
+
+    const background = context.createLinearGradient(0, 0, 0, canvas.height)
+    background.addColorStop(0, '#111722')
+    background.addColorStop(0.48, '#8993a3')
+    background.addColorStop(0.52, '#242b37')
+    background.addColorStop(1, '#080b11')
+    context.fillStyle = background
+    context.fillRect(0, 0, canvas.width, canvas.height)
+
+    // Broad, soft studio panels create calm metallic highlights without postprocessing.
+    const panels = [
+      { x: 110, width: 90, color: '#dce5f5' },
+      { x: 365, width: 180, color: '#ffffff' },
+      { x: 730, width: 110, color: '#829dc9' },
+    ]
+    for (const panel of panels) {
+      const gradient = context.createLinearGradient(panel.x, 0, panel.x + panel.width, 0)
+      gradient.addColorStop(0, '#ffffff00')
+      gradient.addColorStop(0.5, `${panel.color}aa`)
+      gradient.addColorStop(1, '#ffffff00')
+      context.fillStyle = gradient
+      context.fillRect(panel.x, 48, panel.width, 420)
+    }
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.mapping = THREE.EquirectangularReflectionMapping
+    texture.colorSpace = THREE.SRGBColorSpace
+    return texture
+  }, [])
+
+  useEffect(() => () => reflections?.dispose(), [reflections])
 
   useFrame((state, delta) => {
     if (reducedMotion || !group.current || !knot.current) return
     const step = Math.min(delta, 0.05)
-    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, state.pointer.y * 0.13, 2, step)
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, state.pointer.x * 0.2, 2, step)
-    knot.current.rotation.y += step * 0.09
-    knot.current.rotation.z += step * 0.035
-    knot.current.position.y = Math.sin(state.clock.elapsedTime * 0.45) * 0.045
+    const pointer = pointerTarget.current
+    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, 0.12 + pointer.y * 0.075, 2.4, step)
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, 0.12 + pointer.x * 0.11, 2.4, step)
+    group.current.position.y = Math.sin(state.clock.elapsedTime * 0.24) * 0.022
+    knot.current.rotation.y += step * 0.055
+    knot.current.rotation.z += step * 0.02
+    if (keyLight.current) {
+      keyLight.current.position.x = THREE.MathUtils.damp(keyLight.current.position.x, 3 + pointer.x * 0.35, 2, step)
+      keyLight.current.position.y = THREE.MathUtils.damp(keyLight.current.position.y, 5 + pointer.y * 0.25, 2, step)
+    }
   })
 
   return (
     <group ref={group} rotation={[0.12, 0.12, 0]}>
       <mesh ref={knot} rotation={[0.5, -0.3, -0.55]} scale={0.88}>
-        <torusKnotGeometry args={[1.22, 0.37, 220, 40, 2, 3]} />
-        <meshPhysicalMaterial color="#9ca6b9" metalness={0.92} roughness={0.24} clearcoat={0.6} clearcoatRoughness={0.2} />
+        <torusKnotGeometry args={[1.22, 0.37, 160, 28, 2, 3]} />
+        <meshPhysicalMaterial color="#9ca6b9" metalness={0.88} roughness={0.3} envMap={reflections ?? undefined} envMapIntensity={0.8} clearcoat={0.4} clearcoatRoughness={0.26} />
       </mesh>
       <mesh position={[1.35, 1.15, -0.2]}>
         <sphereGeometry args={[0.09, 24, 24]} />
         <meshStandardMaterial color="#89aef5" metalness={0.6} roughness={0.25} />
       </mesh>
-      <Environment resolution={128}>
-        <Lightformer intensity={3} color="#ffffff" position={[0, 4, 3]} scale={[7, 3, 1]} />
-        <Lightformer intensity={4} color="#e1e8ff" position={[-4, 1, 1]} rotation={[0, Math.PI / 2, 0]} scale={[3, 6, 1]} />
-        <Lightformer intensity={2} color="#688bc8" position={[4, -1, 2]} rotation={[0, -Math.PI / 2, 0]} scale={[3, 5, 1]} />
-        <Lightformer intensity={1.3} color="#ffffff" position={[0, -4, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[5, 3, 1]} />
-      </Environment>
     </group>
   )
 }
@@ -59,9 +97,11 @@ export function StaticSculpture() {
   )
 }
 
-export default function Sculpture({ reducedMotion }: { reducedMotion: boolean }) {
+export default function Sculpture({ reducedMotion, pointerTarget }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget> }) {
   const [lost, setLost] = useState(false)
+  const [coarsePointer] = useState(() => window.matchMedia('(pointer: coarse)').matches)
   const cleanup = useRef<(() => void) | null>(null)
+  const keyLight = useRef<THREE.DirectionalLight>(null)
   useEffect(() => () => cleanup.current?.(), [])
 
   if (lost) return <StaticSculpture />
@@ -69,9 +109,9 @@ export default function Sculpture({ reducedMotion }: { reducedMotion: boolean })
   return (
     <Canvas
       camera={{ position: [0, 0, 5.5], fov: 43 }}
-      dpr={[1, 1.5]}
+      dpr={coarsePointer ? [1, 1.1] : [1, 1.35]}
       frameloop={reducedMotion ? 'demand' : 'always'}
-      gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
+      gl={{ antialias: !coarsePointer, alpha: true, powerPreference: 'low-power' }}
       fallback={<StaticSculpture />}
       onCreated={({ gl }) => {
         const canvas = gl.domElement
@@ -81,8 +121,8 @@ export default function Sculpture({ reducedMotion }: { reducedMotion: boolean })
       }}
     >
       <ambientLight intensity={0.45} />
-      <directionalLight position={[3, 5, 4]} intensity={2} />
-      <Suspense fallback={null}><Knot reducedMotion={reducedMotion} /></Suspense>
+      <directionalLight ref={keyLight} position={[3, 5, 4]} intensity={2} />
+      <Knot reducedMotion={reducedMotion} pointerTarget={pointerTarget} keyLight={keyLight} />
     </Canvas>
   )
 }

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { MotionConfig, motion, useReducedMotion } from 'motion/react'
+import { MotionConfig, motion, useMotionValue, useReducedMotion, useSpring } from 'motion/react'
+import type { MotionStyle } from 'motion/react'
 import {
-  ArrowDown, ArrowDownRight, ArrowRight, ArrowUp, ArrowUpRight, Box, Check,
-  CodeXml, Database, GitBranch, LayoutTemplate, Mail,
-  Menu, Palette, X,
+  ArrowDown, ArrowDownRight, ArrowRight, ArrowUp, ArrowUpRight, Check,
+  CodeXml, FileText, Mail, Menu, Server, X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import HeroArt from './components/HeroArt'
@@ -18,19 +18,66 @@ const navigation = [
 ]
 
 const skillIcons: Record<string, LucideIcon> = {
-  code: CodeXml, palette: Palette, box: Box, database: Database, git: GitBranch, layout: LayoutTemplate,
+  frontend: CodeXml, backend: Server,
 }
 
-function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+function Reveal({ children, className = '', delay = 0, style, ...motionProps }: { children: ReactNode; className?: string; delay?: number; style?: MotionStyle; onPointerMove?: React.PointerEventHandler<HTMLDivElement>; onPointerLeave?: React.PointerEventHandler<HTMLDivElement> }) {
   const reducedMotion = useReducedMotion()
   return (
     <motion.div
       className={className}
+      style={style}
+      {...motionProps}
       initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
     >{children}</motion.div>
+  )
+}
+
+function ProjectCard({ project, index, onSelect }: { project: Project; index: number; onSelect: (project: Project) => void }) {
+  const reduceMotion = useReducedMotion()
+  const tiltX = useSpring(useMotionValue(0), { stiffness: 170, damping: 24, mass: 0.6 })
+  const tiltY = useSpring(useMotionValue(0), { stiffness: 170, damping: 24, mass: 0.6 })
+  const imageX = useSpring(useMotionValue('0px'), { stiffness: 140, damping: 25 })
+  const imageY = useSpring(useMotionValue('0px'), { stiffness: 140, damping: 25 })
+
+  const resetTilt = () => {
+    tiltX.set(0)
+    tiltY.set(0)
+    imageX.set('0px')
+    imageY.set('0px')
+  }
+  const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (event) => {
+    if (reduceMotion || event.pointerType === 'touch' || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = (event.clientX - bounds.left) / bounds.width * 2 - 1
+    const y = (event.clientY - bounds.top) / bounds.height * 2 - 1
+    tiltX.set(-y * 2.5)
+    tiltY.set(x * 2.5)
+    imageX.set(`${-x * 4}px`)
+    imageY.set(`${-y * 4}px`)
+  }
+
+  return (
+    <Reveal key={project.title} className={`project-card ${index === 0 ? 'project-featured' : ''}`} delay={index * 0.08} onPointerMove={handlePointerMove} onPointerLeave={resetTilt}
+      style={{ perspective: 1200, rotateX: tiltX, rotateY: tiltY, '--image-x': imageX, '--image-y': imageY } as MotionStyle}>
+      <button className="project-image-button" onClick={() => onSelect(project)} aria-label={`View ${project.title} project details`}>
+        <img src={`${import.meta.env.BASE_URL}${project.image}`} alt={project.imageAlt} loading="lazy" width="1200" height="800" />
+        {project.sample && <span className="sample-badge">DEMONSTRATION · CONCEPT</span>}
+        <span className="project-open" aria-hidden="true"><ArrowUpRight size={22} /></span>
+      </button>
+      <div className="project-info">
+        <div className="project-category"><span>{project.category}</span><span>{project.number} /</span></div>
+        <h3><button className="project-title" onClick={() => onSelect(project)}>{project.title}<ArrowUpRight size={24} strokeWidth={1.3} /></button></h3>
+        <p>{project.description}</p>
+        <div className="project-meta">
+          <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+          {project.github ? <a href={project.github} target="_blank" rel="noreferrer" aria-label={`${project.title} GitHub repository`} className="icon-button"><Github size={17} /></a> : <span className="repository-placeholder" title="Sample concept — repository link not added"><Github size={14} /> Link pending</span>}
+        </div>
+      </div>
+    </Reveal>
   )
 }
 
@@ -67,7 +114,7 @@ function Header() {
         <a href="#home" className="wordmark" aria-label="Ryan Dengcong — home" onClick={() => setOpen(false)}>rd<span>.</span></a>
         <nav className={`main-nav ${open ? 'is-open' : ''}`} id="main-navigation" aria-label="Main navigation">
           {navigation.map(({ id, label }) => (
-            <a key={id} href={`#${id}`} onClick={() => setOpen(false)} aria-current={active === id ? 'location' : undefined}>{label}<span /></a>
+            <a key={id} href={`#${id}`} onClick={() => setOpen(false)} aria-current={active === id ? 'location' : undefined}>{label}<span aria-hidden="true" /></a>
           ))}
         </nav>
         <div className="header-actions">
@@ -83,17 +130,37 @@ function Header() {
 
 function ProjectDialog({ project, onClose }: { project: Project | null; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (!project) return
     const element = dialog.current
     const previousOverflow = document.body.style.overflow
+    element?.classList.remove('is-closing')
     element?.showModal()
     document.body.style.overflow = 'hidden'
-    return () => { element?.close(); document.body.style.overflow = previousOverflow }
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+      element?.close()
+      document.body.style.overflow = previousOverflow
+    }
   }, [project])
 
+  const closeDialog = () => {
+    const element = dialog.current
+    if (!project || !element?.open || element.classList.contains('is-closing')) return
+    element.classList.add('is-closing')
+    const finishClose = () => {
+      element.close()
+      element.classList.remove('is-closing')
+      onClose()
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finishClose()
+    else closeTimer.current = setTimeout(finishClose, 180)
+  }
+
   return (
-    <dialog ref={dialog} className="project-dialog" aria-labelledby="project-dialog-title" onClose={onClose}
+    <dialog ref={dialog} className="project-dialog" aria-labelledby="project-dialog-title"
+      onCancel={(event) => { event.preventDefault(); closeDialog() }}
       onKeyDown={(event) => {
         if (event.key !== 'Tab') return
         const focusable = event.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]')
@@ -107,9 +174,9 @@ function ProjectDialog({ project, onClose }: { project: Project | null; onClose:
           first?.focus()
         }
       }}
-      onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      onClick={(event) => { if (event.target === event.currentTarget) closeDialog() }}>
       {project && <div className="dialog-inner">
-        <button className="dialog-close icon-button" onClick={onClose} aria-label="Close project details" autoFocus><X size={21} /></button>
+        <button className="dialog-close icon-button" onClick={closeDialog} aria-label="Close project details" autoFocus><X size={21} /></button>
         <img src={`${import.meta.env.BASE_URL}${project.image}`} alt={project.imageAlt} />
         <div className="dialog-content">
           <span className="eyebrow">{project.sample ? 'SAMPLE PROJECT · CONCEPT ONLY' : project.category}</span>
@@ -150,7 +217,7 @@ function Contact() {
         <Reveal className="contact-main">
           <div>
             <h2 id="contact-heading">Have something<br />in <span className="serif-word">mind?</span></h2>
-            <p>A project, an idea, or just a conversation.<br />Let’s make something worth building.</p>
+            <p>{profile.email ? 'For a project inquiry or a conversation, send me a note.' : 'For now, GitHub is the best way to reach me.'}</p>
           </div>
           <a href={profile.email ? `mailto:${profile.email}` : profile.github} className="contact-orb" aria-label={profile.email ? 'Send Ryan an email' : 'Visit Ryan on GitHub'} {...(!profile.email ? { target: '_blank', rel: 'noreferrer' } : {})}>
             <ArrowUpRight strokeWidth={1.2} />
@@ -158,16 +225,16 @@ function Contact() {
         </Reveal>
         <Reveal className="contact-bottom">
           <div className="email-block">
-            <span className="eyebrow">SAY HELLO</span>
-            {profile.email ? <div className="email-row">
+            {profile.email ? <><span className="eyebrow">EMAIL</span><div className="email-row">
               <a href={`mailto:${profile.email}`} className="email-link">{profile.email}</a>
               <button className="icon-button" onClick={copyEmail} aria-label="Copy email address">{copied ? <Check size={17} /> : <Mail size={17} />}</button>
               <span className="copy-status" role="status">{copied ? 'Copied' : copyError ? 'Please select and copy the email.' : ''}</span>
-            </div> : <div className="email-placeholder">Email coming soon <span>Contact placeholder</span></div>}
+            </div></> : <><span className="eyebrow">CONTACT</span><p className="contact-hint">Email address not added yet.</p></>}
           </div>
           <div className="social-links">
             <a href={profile.github} target="_blank" rel="noreferrer"><Github size={17} /> GitHub <ArrowUpRight size={15} /></a>
-            {profile.linkedin ? <a href={profile.linkedin} target="_blank" rel="noreferrer"><Linkedin size={17} /> LinkedIn <ArrowUpRight size={15} /></a> : <span className="social-placeholder" title="LinkedIn profile has not been provided"><Linkedin size={17} /> LinkedIn <span>Coming soon</span></span>}
+            {profile.linkedin && <a href={profile.linkedin} target="_blank" rel="noreferrer"><Linkedin size={17} /> LinkedIn <ArrowUpRight size={15} /></a>}
+            {profile.resume && <a href={profile.resume} target="_blank" rel="noreferrer"><FileText size={17} /> Résumé <ArrowUpRight size={15} /></a>}
           </div>
         </Reveal>
       </div>
@@ -188,10 +255,10 @@ export default function App() {
           <div className="container">
             <div className="hero-main">
               <Reveal className="hero-copy">
-                <div className="hero-eyebrow"><span className="status-dot" /> CRAFTING THE WEB, WITH PURPOSE</div>
-                <h1 id="hero-heading">Ryan M.<br />Dengcong<span className="title-dot">.</span></h1>
+                <div className="hero-eyebrow">{profile.name}</div>
+                <h1 id="hero-heading" aria-label="Building purposeful digital experiences.">Building purposeful<br />digital experiences<span className="title-dot">.</span></h1>
                 <p className="hero-role">{profile.role}</p>
-                <p className="hero-description">Thoughtful code. Meaningful experiences.<br />I build for the people on the other side of the screen.</p>
+                <p className="hero-description">With a BSIT background, I focus on frontend and backend development to build functional, user-friendly web applications.</p>
                 <div className="hero-actions">
                   <a href="#projects" className="button button-primary">Explore my work <ArrowUpRight size={17} /></a>
                   <a href="#about" className="hero-about-link">A little about me <ArrowRight size={16} /></a>
@@ -213,15 +280,18 @@ export default function App() {
             <div className="about-grid">
               <Reveal>
                 <h2 id="about-heading">Good code.<br /><span className="muted-heading">Better experiences.</span></h2>
-                <div className="about-signature">Ryan M. Dengcong<span>DEVELOPER & CURIOUS MIND</span></div>
+                <div className="about-signature">Ryan M. Dengcong<span>WEB DEVELOPER / PROGRAMMER</span></div>
               </Reveal>
               <Reveal className="about-copy" delay={0.08}>
-                <p className="about-lead">{profile.introduction}</p>
-                <p>{profile.approach}</p>
-                <span className="draft-note">Introduction draft · ready to personalize</span>
+                {profile.introduction.map((paragraph, index) => <p key={paragraph} className={index === 0 ? 'about-lead' : undefined}>{paragraph}</p>)}
                 {profile.resume && <a className="text-link" href={profile.resume} target="_blank" rel="noreferrer">View résumé <ArrowUpRight size={17} /></a>}
               </Reveal>
             </div>
+            <Reveal className="profile-facts">
+              <div><span>EDUCATION</span><p>{profile.education}</p></div>
+              <div><span>EXPERIENCE</span><p>{profile.experienceLevel}</p></div>
+              <div><span>DEVELOPMENT FOCUS</span><p>{profile.developmentFocus}</p></div>
+            </Reveal>
             <Reveal className="principles">
               <div><span className="principle-number">01 /</span><h3>Built with intention</h3><p>Every decision starts with a purpose.</p></div>
               <div><span className="principle-number">02 /</span><h3>Clarity over complexity</h3><p>Simple experiences. Thoughtful solutions.</p></div>
@@ -232,10 +302,10 @@ export default function App() {
 
         <section id="skills" className="skills-section section" aria-labelledby="skills-heading">
           <div className="container">
-            <SectionLabel number="02">THE TOOLKIT</SectionLabel>
+            <SectionLabel number="02">TECHNICAL SKILLS</SectionLabel>
             <Reveal className="section-heading-row">
-              <h2 id="skills-heading">The tools behind<br /><span className="muted-heading">the ideas.</span></h2>
-              <div className="section-description"><p>A modern toolkit for building on the web.<br />The right tool. A thoughtful approach.</p><span className="draft-note">Sample skill selection · ready to personalize</span></div>
+              <h2 id="skills-heading">Frontend & backend<br /><span className="muted-heading">development.</span></h2>
+              <div className="section-description"><p>Programming languages I use to build web applications, grouped by their role in development.</p></div>
             </Reveal>
             <div className="skills-grid">
               {toolkit.map((skill, i) => {
@@ -255,27 +325,10 @@ export default function App() {
             <SectionLabel number="03">SELECTED CONCEPTS</SectionLabel>
             <Reveal className="section-heading-row">
               <h2 id="projects-heading">Ideas made<br /><span className="muted-heading">tangible.</span></h2>
-              <div className="section-description"><p>A few possibilities, thoughtfully explored.<br />A space for the work that comes next.</p><span className="draft-note">Sample projects · illustrative concepts only</span></div>
+              <div className="section-description"><p>Illustrative interface concepts, clearly labeled as demonstrations rather than shipped or client work.</p></div>
             </Reveal>
             <div className="projects-grid">
-              {projects.map((project, index) => (
-                <Reveal key={project.title} className={`project-card ${index === 0 ? 'project-featured' : ''}`} delay={index === 2 ? 0.08 : 0}>
-                  <button className="project-image-button" onClick={() => setSelectedProject(project)} aria-label={`View ${project.title} project details`}>
-                    <img src={`${import.meta.env.BASE_URL}${project.image}`} alt={project.imageAlt} loading="lazy" width="1200" height="800" />
-                    {project.sample && <span className="sample-badge">SAMPLE PROJECT</span>}
-                    <span className="project-open" aria-hidden="true"><ArrowUpRight size={22} /></span>
-                  </button>
-                  <div className="project-info">
-                    <div className="project-category"><span>{project.category}</span><span>{project.number} /</span></div>
-                    <h3><button className="project-title" onClick={() => setSelectedProject(project)}>{project.title}<ArrowUpRight size={24} strokeWidth={1.3} /></button></h3>
-                    <p>{project.description}</p>
-                    <div className="project-meta">
-                      <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                      {project.github ? <a href={project.github} target="_blank" rel="noreferrer" aria-label={`${project.title} GitHub repository`} className="icon-button"><Github size={17} /></a> : <span className="repository-placeholder" title="Sample concept — repository link not added"><Github size={14} /> Link pending</span>}
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
+              {projects.map((project, index) => <ProjectCard key={project.title} project={project} index={index} onSelect={setSelectedProject} />)}
             </div>
             <Reveal className="projects-footer">
               <span>More ideas are always taking shape.</span>

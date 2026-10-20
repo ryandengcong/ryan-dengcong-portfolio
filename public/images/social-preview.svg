@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse"><stop stop-color="#111319"/><stop offset="1" stop-color="#090a0d"/></linearGradient>
+    <linearGradient id="metal" x1="655" y1="170" x2="1060" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#f0f3fa"/><stop offset=".25" stop-color="#8996ad"/><stop offset=".52" stop-color="#414a5c"/><stop offset=".76" stop-color="#c1cad8"/><stop offset="1" stop-color="#57647b"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#bdd0f4"/><stop offset="1" stop-color="#819fd8"/></linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientTransform="matrix(0 260 -310 0 890 320)" gradientUnits="userSpaceOnUse"><stop stop-color="#9dbaf3" stop-opacity=".12"/><stop offset="1" stop-color="#9dbaf3" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h1200v630H0z"/><path fill="url(#halo)" d="M0 0h1200v630H0z"/>
+  <path stroke="#9dbaf3" stroke-opacity=".72" d="M80 90v450"/>
+  <text x="120" y="127" fill="#c6cbd5" font-family="Arial,sans-serif" font-size="18" letter-spacing="4">RYAN M. DENGCONG</text>
+  <text x="120" y="263" fill="#f2f3f6" font-family="Arial,sans-serif" font-size="66" font-weight="400" letter-spacing="-3">Building purposeful</text>
+  <text x="120" y="340" fill="#f2f3f6" font-family="Arial,sans-serif" font-size="66" font-weight="400" letter-spacing="-3">digital experiences<tspan fill="url(#blue)">.</tspan></text>
+  <text x="123" y="405" fill="#aeb4c0" font-family="Arial,sans-serif" font-size="22" letter-spacing=".5">WEB DEVELOPER / PROGRAMMER</text>
+  <text x="123" y="443" fill="#858b99" font-family="Arial,sans-serif" font-size="16" letter-spacing="1.2">INFORMATION TECHNOLOGY · FRONTEND &amp; BACKEND</text>
+  <ellipse cx="850" cy="310" rx="103" ry="158" transform="rotate(-38 850 310)" stroke="url(#metal)" stroke-width="43"/>
+  <ellipse cx="850" cy="310" rx="103" ry="158" transform="rotate(38 850 310)" stroke="url(#metal)" stroke-width="43"/>
+  <path d="M770 190c-78 57-49 189 54 240" stroke="url(#metal)" stroke-width="43" stroke-linecap="round"/>
+  <circle cx="1034" cy="172" r="6" fill="#9dbaf3"/>
+  <path stroke="#fff" stroke-opacity=".12" d="M120 496h960"/>
+  <text x="120" y="535" fill="#858b99" font-family="Arial,sans-serif" font-size="13" letter-spacing="3">DARK · MINIMAL · INTERACTIVE</text>
+</svg>

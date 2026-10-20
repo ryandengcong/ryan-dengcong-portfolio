@@ -1,6 +1,6 @@
 # Ryan M. Dengcong — Developer Portfolio
 
-A complete, responsive portfolio for Ryan M. Dengcong, Web Developer / Programmer. Built with React, TypeScript, Vite, Tailwind CSS, Three.js, React Three Fiber, Drei, Motion for React, and Lucide React.
+A responsive portfolio for Ryan M. Dengcong, Web Developer / Programmer. Built with React, TypeScript, Vite, Tailwind CSS, Three.js, React Three Fiber, Motion for React, and Lucide React.
 
 ## Run locally
 
@@ -38,7 +38,7 @@ The same rule applies to production: serve `dist/` with `npm run preview` or a s
 
 - A dark `#0D0D0F` design with subtle blue accents, generous spacing, and locally hosted Manrope typography.
 - Home, About, Skills, Projects, and Contact sections.
-- A slowly rotating metallic sculpture, lit by locally generated studio lights. Pointer movement changes its orientation.
+- A slowly rotating metallic sculpture with a locally generated studio reflection map. Pointer movement changes its orientation.
 - A pause control, support for the operating system’s reduced-motion preference, and automatic animation suspension when the hero or browser tab is hidden.
 - Static SVG artwork if WebGL fails, is unavailable, or loses its context; the portfolio remains functional.
 - Responsive navigation, a skip link, visible keyboard focus, accessible section headings, and native project dialogs with focus containment, Escape dismissal, and focus restoration.
@@ -50,12 +50,12 @@ The same rule applies to production: serve `dist/` with `npm run preview` or a s
 
 Start with **`src/content.ts`**:
 
-1. Replace the draft introduction and sample toolkit with your actual background and skills.
+1. Edit the introduction and toolkit in `src/content.ts` to reflect your background and the technologies you want to highlight.
 2. Set `profile.email`, `profile.linkedin`, and optionally `profile.resume`. Missing values intentionally remain `null`; a résumé link appears only when supplied.
 3. Replace sample project objects with your real work. Set `github` and optionally `live` to full HTTPS URLs. Set `sample: false` only for real projects, and describe your actual contribution and results.
 4. Add your images to `public/images/` and set each project’s `image` to a relative path such as `images/my-project.webp`. Provide useful `imageAlt` text.
-5. Once personalized, update the “draft” notes and “selected concepts” copy in `src/App.tsx`. The current copy deliberately does not claim work, experience, or skills you have not provided.
-6. Update the description and social metadata in `index.html` for the final site. Add a canonical URL and social preview image once you know the public domain.
+5. Replace the clearly labeled interface concepts when you have real projects to show. The current copy does not claim client work, experience, or results.
+6. Update the page description and social metadata in `index.html` if your positioning changes. The social preview image is `public/images/social-preview.png`; add a canonical URL once your Cloudflare Workers hostname is confirmed.
 
 The GitHub profile is based on this repository’s owner: `https://github.com/ryandengcong`.
 
