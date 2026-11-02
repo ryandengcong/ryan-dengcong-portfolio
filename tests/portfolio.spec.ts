@@ -101,6 +101,27 @@ test('scroll progress indicator tracks page progress and the hero art responds t
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
+test('section reveals enter once and stay settled while scrolling back upward', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+      if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') return null
+      return original.apply(this, [type, ...args] as Parameters<typeof original>)
+    } as typeof original
+  })
+  await page.goto('/')
+  const reveal = page.locator('#skills .section-heading-row')
+  await expect(reveal).toHaveCSS('opacity', '0')
+  await reveal.scrollIntoViewIfNeeded()
+  await expect(reveal).toHaveCSS('opacity', '1')
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, document.documentElement.scrollHeight)
+    window.scrollTo(0, 0)
+  })
+  await expect(reveal).toHaveCSS('opacity', '1')
+})
+
 test('project images receive restrained scroll parallax without removing hover tilt', async ({ page, isMobile }) => {
   test.skip(isMobile, 'This interaction check uses a fine pointer')
   await page.goto('/#projects')
