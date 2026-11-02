@@ -158,6 +158,9 @@ h2 { font-size: clamp(36px, 4.3vw, 56px); font-weight: 400; line-height: 1.15; l
 .text-link { display: inline-flex; gap: 12px; align-items: center; color: #d5def1; font-size: 11px; }
 .text-link svg { transition: transform .2s; }
 .text-link:hover svg { transform: translate(2px,-2px); }
+.resume-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.resume-actions .button { gap: 11px; }
+.resume-actions .button-secondary { color: #e5e8f0; }
 .interlude { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding-block: 31px; gap: 10px; }
 .interlude span { font-size: clamp(26px, 5vw, 64px); letter-spacing: -.05em; font-weight: 500; color: #686873; }
 .interlude span:nth-child(2) { color: #80808b; }
@@ -264,6 +267,8 @@ h2 { font-size: clamp(36px, 4.3vw, 56px); font-weight: 400; line-height: 1.15; l
   .about-signature { margin-top: 25px; }
   .about-copy .about-lead { font-size: 15px; }
   .about-copy p { font-size: 12px; }
+  .resume-actions { gap: 10px; margin-top: 24px; }
+  .resume-actions .button { flex: 1 1 150px; }
   .principles { margin-top: 36px; gap: 20px; grid-template-columns: 1fr; }
   .principles > div, .principles > div:first-child { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--border); }
   .principles > div:last-child { padding-bottom: 0; border: 0; }
