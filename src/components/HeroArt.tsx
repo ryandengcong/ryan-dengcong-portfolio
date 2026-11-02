@@ -1,5 +1,7 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { motion, useTransform } from 'motion/react'
+import type { MotionValue, MotionStyle } from 'motion/react'
 import { Pause, Play } from 'lucide-react'
 
 const Sculpture = lazy(() => import('./Sculpture'))
@@ -14,12 +16,13 @@ class SculptureBoundary extends Component<{ children: ReactNode }, { failed: boo
   render() { return this.state.failed ? <Placeholder failed /> : this.props.children }
 }
 
-export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
+export default function HeroArt({ reducedMotion, scrollProgress }: { reducedMotion: boolean; scrollProgress: MotionValue<number> }) {
   const [paused, setPaused] = useState(false)
   const [visible, setVisible] = useState(true)
   const [tabVisible, setTabVisible] = useState(true)
   const art = useRef<HTMLDivElement>(null)
   const pointerTarget = useRef({ x: 0, y: 0 })
+  const orbitRotation = useTransform(scrollProgress, (progress) => `${reducedMotion ? 0 : progress * 3}deg`)
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
     if (art.current) observer.observe(art.current)
@@ -45,7 +48,7 @@ export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
     }
   }, [])
   return (
-    <div className="hero-art" ref={art}>
+    <motion.div className="hero-art" ref={art} style={{ '--scroll-orbit-rotation': orbitRotation } as MotionStyle} data-testid="hero-art">
       <div className="orbit orbit-one" aria-hidden="true" />
       <div className="orbit orbit-two" aria-hidden="true" />
       <span className="art-cross cross-one" aria-hidden="true">+</span>
@@ -53,7 +56,7 @@ export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
       <div className="sculpture-canvas" role="img" aria-label="An abstract, polished silver knot sculpture. Decorative 3D artwork.">
         <SculptureBoundary>
           <Suspense fallback={<Placeholder />}>
-            <Sculpture reducedMotion={reducedMotion || paused || !visible || !tabVisible} pointerTarget={pointerTarget} />
+            <Sculpture reducedMotion={reducedMotion || paused || !visible || !tabVisible} pointerTarget={pointerTarget} scrollProgress={scrollProgress} />
           </Suspense>
         </SculptureBoundary>
       </div>
@@ -66,6 +69,6 @@ export default function HeroArt({ reducedMotion }: { reducedMotion: boolean }) {
         )}
       </div>
       <span className="art-coordinate" aria-hidden="true">FIG. 01 — FORM & FUNCTION</span>
-    </div>
+    </motion.div>
   )
 }

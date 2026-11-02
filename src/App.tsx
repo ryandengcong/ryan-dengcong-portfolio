@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
-import { MotionConfig, motion, useMotionValue, useReducedMotion, useSpring } from 'motion/react'
+import type { ReactNode, Ref } from 'react'
+import { MotionConfig, motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react'
 import type { MotionStyle } from 'motion/react'
 import {
   ArrowDown, ArrowDownRight, ArrowRight, ArrowUp, ArrowUpRight, Check,
@@ -25,23 +25,27 @@ const resumeUrl = profile.resume
   ? `${import.meta.env.BASE_URL}${profile.resume.replace(/^\/+/, '')}`
   : null
 
-function Reveal({ children, className = '', delay = 0, style, ...motionProps }: { children: ReactNode; className?: string; delay?: number; style?: MotionStyle; onPointerMove?: React.PointerEventHandler<HTMLDivElement>; onPointerLeave?: React.PointerEventHandler<HTMLDivElement> }) {
+function Reveal({ children, className = '', delay = 0, style, ref, ...motionProps }: { children: ReactNode; className?: string; delay?: number; style?: MotionStyle; ref?: Ref<HTMLDivElement>; onPointerMove?: React.PointerEventHandler<HTMLDivElement>; onPointerLeave?: React.PointerEventHandler<HTMLDivElement> }) {
   const reducedMotion = useReducedMotion()
   return (
     <motion.div
+      ref={ref}
       className={className}
       style={style}
       {...motionProps}
-      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.12 }}
-      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
     >{children}</motion.div>
   )
 }
 
 function ProjectCard({ project, index, onSelect }: { project: Project; index: number; onSelect: (project: Project) => void }) {
   const reduceMotion = useReducedMotion()
+  const cardRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: cardRef, offset: ['start end', 'end start'] })
+  const scrollParallax = useSpring(useTransform(scrollYProgress, [0, 1], ['12px', '-12px']), { stiffness: 90, damping: 28, mass: 0.55 })
   const tiltX = useSpring(useMotionValue(0), { stiffness: 170, damping: 24, mass: 0.6 })
   const tiltY = useSpring(useMotionValue(0), { stiffness: 170, damping: 24, mass: 0.6 })
   const imageX = useSpring(useMotionValue('0px'), { stiffness: 140, damping: 25 })
@@ -65,8 +69,8 @@ function ProjectCard({ project, index, onSelect }: { project: Project; index: nu
   }
 
   return (
-    <Reveal key={project.title} className={`project-card ${index === 0 ? 'project-featured' : ''}`} delay={index * 0.08} onPointerMove={handlePointerMove} onPointerLeave={resetTilt}
-      style={{ perspective: 1200, rotateX: tiltX, rotateY: tiltY, '--image-x': imageX, '--image-y': imageY } as MotionStyle}>
+    <Reveal ref={cardRef} key={project.title} className={`project-card ${index === 0 ? 'project-featured' : ''}`} delay={index * 0.08} onPointerMove={handlePointerMove} onPointerLeave={resetTilt}
+      style={{ perspective: 1200, rotateX: tiltX, rotateY: tiltY, '--image-x': imageX, '--image-y': imageY, '--image-scroll-y': reduceMotion ? '0px' : scrollParallax } as MotionStyle}>
       <button className="project-image-button" onClick={() => onSelect(project)} aria-label={`View ${project.title} project details`}>
         <img src={`${import.meta.env.BASE_URL}${project.image}`} alt={project.imageAlt} loading="lazy" width="1200" height="800" />
         {project.sample && <span className="sample-badge">DEMONSTRATION · CONCEPT</span>}
@@ -248,14 +252,22 @@ function Contact() {
 
 export default function App() {
   const reducedMotion = useReducedMotion()
+  const heroSection = useRef<HTMLElement>(null)
+  const { scrollYProgress: pageScrollProgress } = useScroll()
+  const { scrollYProgress: heroScrollProgress } = useScroll({ target: heroSection, offset: ['start start', 'end start'] })
+  const smoothPageProgress = useSpring(pageScrollProgress, { stiffness: 120, damping: 32, mass: 0.25 })
+  const smoothHeroProgress = useSpring(heroScrollProgress, { stiffness: 75, damping: 26, mass: 0.45 })
+  const progressValue = reducedMotion ? pageScrollProgress : smoothPageProgress
+  const sculptureScrollProgress = reducedMotion ? heroScrollProgress : smoothHeroProgress
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
   return (
     <MotionConfig reducedMotion="user">
+      <motion.div className="scroll-progress" style={{ scaleX: progressValue }} aria-hidden="true" data-testid="scroll-progress" />
       <a className="skip-link" href="#main">Skip to content</a>
       <Header />
       <main id="main" tabIndex={-1}>
-        <section className="hero section" id="home" aria-labelledby="hero-heading">
+        <section ref={heroSection} className="hero section" id="home" aria-labelledby="hero-heading">
           <div className="container">
             <div className="hero-main">
               <Reveal className="hero-copy">
@@ -268,7 +280,7 @@ export default function App() {
                   <a href="#about" className="hero-about-link">A little about me <ArrowRight size={16} /></a>
                 </div>
               </Reveal>
-              <HeroArt reducedMotion={Boolean(reducedMotion)} />
+              <HeroArt reducedMotion={Boolean(reducedMotion)} scrollProgress={sculptureScrollProgress} />
             </div>
             <div className="hero-footer">
               <a href="#about" className="scroll-link"><span className="scroll-icon"><ArrowDown size={15} /></span> SCROLL TO EXPLORE</a>

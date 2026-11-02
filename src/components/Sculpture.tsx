@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
+import type { MotionValue } from 'motion/react'
 import * as THREE from 'three'
 
 type PointerTarget = { x: number; y: number }
 
-function Knot({ reducedMotion, pointerTarget, keyLight }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget>; keyLight: RefObject<THREE.DirectionalLight | null> }) {
+function Knot({ reducedMotion, pointerTarget, scrollProgress, keyLight }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget>; scrollProgress: MotionValue<number>; keyLight: RefObject<THREE.DirectionalLight | null> }) {
   const group = useRef<THREE.Group>(null)
   const knot = useRef<THREE.Mesh>(null)
   const reflections = useMemo(() => {
@@ -50,9 +51,13 @@ function Knot({ reducedMotion, pointerTarget, keyLight }: { reducedMotion: boole
     if (reducedMotion || !group.current || !knot.current) return
     const step = Math.min(delta, 0.05)
     const pointer = pointerTarget.current
-    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, 0.12 + pointer.y * 0.075, 2.4, step)
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, 0.12 + pointer.x * 0.11, 2.4, step)
+    const scroll = scrollProgress.get()
+    group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, 0.12 + pointer.y * 0.075 + scroll * 0.045, 2.4, step)
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, 0.12 + pointer.x * 0.11 + scroll * 0.12, 2.4, step)
+    group.current.rotation.z = THREE.MathUtils.damp(group.current.rotation.z, scroll * 0.035, 2.2, step)
+    group.current.scale.setScalar(THREE.MathUtils.damp(group.current.scale.x, 1 + scroll * 0.018, 2.2, step))
     group.current.position.y = Math.sin(state.clock.elapsedTime * 0.24) * 0.022
+    state.camera.position.z = THREE.MathUtils.damp(state.camera.position.z, 5.5 - scroll * 0.12, 2.2, step)
     knot.current.rotation.y += step * 0.055
     knot.current.rotation.z += step * 0.02
     if (keyLight.current) {
@@ -97,7 +102,7 @@ export function StaticSculpture() {
   )
 }
 
-export default function Sculpture({ reducedMotion, pointerTarget }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget> }) {
+export default function Sculpture({ reducedMotion, pointerTarget, scrollProgress }: { reducedMotion: boolean; pointerTarget: RefObject<PointerTarget>; scrollProgress: MotionValue<number> }) {
   const [lost, setLost] = useState(false)
   const [coarsePointer] = useState(() => window.matchMedia('(pointer: coarse)').matches)
   const cleanup = useRef<(() => void) | null>(null)
@@ -122,7 +127,7 @@ export default function Sculpture({ reducedMotion, pointerTarget }: { reducedMot
     >
       <ambientLight intensity={0.45} />
       <directionalLight ref={keyLight} position={[3, 5, 4]} intensity={2} />
-      <Knot reducedMotion={reducedMotion} pointerTarget={pointerTarget} keyLight={keyLight} />
+      <Knot reducedMotion={reducedMotion} pointerTarget={pointerTarget} scrollProgress={scrollProgress} keyLight={keyLight} />
     </Canvas>
   )
 }
