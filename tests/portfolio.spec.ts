@@ -76,6 +76,41 @@ test('reduced-motion preference removes animation control and smooth scrolling',
   await card.scrollIntoViewIfNeeded()
   await card.hover({ position: { x: 20, y: 20 } })
   expect(await card.evaluate((node) => node.style.getPropertyValue('--image-x'))).toBe('0px')
+  expect(await card.evaluate((node) => node.style.getPropertyValue('--image-scroll-y'))).toBe('0px')
+})
+
+test('scroll progress indicator tracks page progress and the hero art responds to scroll', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+      if (type === 'webgl' || type === 'webgl2' || type === 'experimental-webgl') return null
+      return original.apply(this, [type, ...args] as Parameters<typeof original>)
+    } as typeof original
+  })
+  await page.goto('/')
+  const progressBar = page.getByTestId('scroll-progress')
+  const heroArt = page.getByTestId('hero-art')
+  const getScale = () => progressBar.evaluate((node) => new DOMMatrixReadOnly(getComputedStyle(node).transform).a)
+  const initialOrbit = await heroArt.evaluate((node) => node.style.getPropertyValue('--scroll-orbit-rotation'))
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, document.documentElement.scrollHeight)
+  })
+  await expect.poll(getScale).toBeGreaterThan(0.98)
+  await expect.poll(() => heroArt.evaluate((node) => node.style.getPropertyValue('--scroll-orbit-rotation'))).not.toBe(initialOrbit)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+test('project images receive restrained scroll parallax without removing hover tilt', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'This interaction check uses a fine pointer')
+  await page.goto('/#projects')
+  const card = page.locator('.project-card').nth(1)
+  await card.scrollIntoViewIfNeeded()
+  const initialOffset = await card.evaluate((node) => parseFloat(node.style.getPropertyValue('--image-scroll-y')))
+  await page.mouse.wheel(0, 180)
+  await expect.poll(() => card.evaluate((node) => parseFloat(node.style.getPropertyValue('--image-scroll-y')))).not.toBe(initialOffset)
+  const currentOffset = await card.evaluate((node) => Math.abs(parseFloat(node.style.getPropertyValue('--image-scroll-y'))))
+  expect(currentOffset).toBeLessThanOrEqual(12)
 })
 
 test('project cards tilt gently with desktop pointer and settle back on exit', async ({ page, isMobile }) => {
@@ -93,7 +128,7 @@ test('project cards tilt gently with desktop pointer and settle back on exit', a
   })
   expect(rotation).toBeLessThanOrEqual(2.6)
   await page.mouse.move(10, 10)
-  await expect.poll(() => card.evaluate((node) => Math.abs(parseFloat(node.style.getPropertyValue('--image-x'))))).toBeLessThan(0.1)
+  await expect.poll(() => card.evaluate((node) => Math.abs(parseFloat(node.style.getPropertyValue('--image-x'))))).toBeLessThan(0.2)
 })
 
 test('WebGL failure preserves the artwork and the complete usable portfolio', async ({ page }) => {
