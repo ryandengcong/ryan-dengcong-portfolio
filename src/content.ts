@@ -6,7 +6,7 @@ export const profile = {
   email: 'rdengcong@gmail.com',
   github: 'https://github.com/ryandengcong',
   linkedin: null as string | null,
-  resume: null as string | null,
+  resume: 'files/Ryan_M_Dengcong_Resume.pdf' as string | null,
   education: 'Bachelor of Science in Information Technology (BSIT)',
   experienceLevel: 'Experienced developer',
   developmentFocus: 'Frontend & Backend Development',

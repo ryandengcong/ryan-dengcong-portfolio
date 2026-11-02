@@ -128,6 +128,26 @@ test('professional background and declared skills are shown without unverified t
   await expect(skills).not.toContainText(/React|TypeScript|Three\.js|Node\.js|SQL/)
 })
 
+test('resume view and download links serve the supplied PDF from repository subdirectories', async ({ page }) => {
+  await page.goto('/#about')
+  const viewLink = page.getByRole('link', { name: /View Resume/ })
+  const downloadLink = page.getByRole('link', { name: 'Download CV' })
+  await expect(viewLink).toHaveAttribute('target', '_blank')
+  await expect(downloadLink).toHaveAttribute('download', 'Ryan_M_Dengcong_CV.pdf')
+
+  const viewHref = await viewLink.getAttribute('href')
+  const downloadHref = await downloadLink.getAttribute('href')
+  expect(viewHref).toBeTruthy()
+  expect(downloadHref).toBe(viewHref)
+  const githubPagesUrl = new URL(viewHref!, 'https://ryandengcong.github.io/ryan-dengcong-portfolio/')
+  expect(githubPagesUrl.pathname).toBe('/ryan-dengcong-portfolio/files/Ryan_M_Dengcong_Resume.pdf')
+
+  const response = await page.request.get(new URL(viewHref!, page.url()).href)
+  expect(response.ok()).toBe(true)
+  expect(response.headers()['content-type']).toContain('application/pdf')
+  expect((await response.body()).subarray(0, 5).toString()).toBe('%PDF-')
+})
+
 test('configured email copy and GitHub contact links work', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/#contact')

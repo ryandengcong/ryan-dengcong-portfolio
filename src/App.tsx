@@ -4,7 +4,7 @@ import { MotionConfig, motion, useMotionValue, useReducedMotion, useSpring } fro
 import type { MotionStyle } from 'motion/react'
 import {
   ArrowDown, ArrowDownRight, ArrowRight, ArrowUp, ArrowUpRight, Check,
-  CodeXml, FileText, Mail, Menu, Server, X,
+  CodeXml, Download, FileText, Mail, Menu, Server, X,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import HeroArt from './components/HeroArt'
@@ -20,6 +20,10 @@ const navigation = [
 const skillIcons: Record<string, LucideIcon> = {
   frontend: CodeXml, backend: Server,
 }
+
+const resumeUrl = profile.resume
+  ? `${import.meta.env.BASE_URL}${profile.resume.replace(/^\/+/, '')}`
+  : null
 
 function Reveal({ children, className = '', delay = 0, style, ...motionProps }: { children: ReactNode; className?: string; delay?: number; style?: MotionStyle; onPointerMove?: React.PointerEventHandler<HTMLDivElement>; onPointerLeave?: React.PointerEventHandler<HTMLDivElement> }) {
   const reducedMotion = useReducedMotion()
@@ -234,7 +238,7 @@ function Contact() {
           <div className="social-links">
             <a href={profile.github} target="_blank" rel="noreferrer"><Github size={17} /> GitHub <ArrowUpRight size={15} /></a>
             {profile.linkedin && <a href={profile.linkedin} target="_blank" rel="noreferrer"><Linkedin size={17} /> LinkedIn <ArrowUpRight size={15} /></a>}
-            {profile.resume && <a href={profile.resume} target="_blank" rel="noreferrer"><FileText size={17} /> Résumé <ArrowUpRight size={15} /></a>}
+            {resumeUrl && <a href={resumeUrl} target="_blank" rel="noreferrer"><FileText size={17} /> Résumé <ArrowUpRight size={15} /></a>}
           </div>
         </Reveal>
       </div>
@@ -284,7 +288,14 @@ export default function App() {
               </Reveal>
               <Reveal className="about-copy" delay={0.08}>
                 {profile.introduction.map((paragraph, index) => <p key={paragraph} className={index === 0 ? 'about-lead' : undefined}>{paragraph}</p>)}
-                {profile.resume && <a className="text-link" href={profile.resume} target="_blank" rel="noreferrer">View résumé <ArrowUpRight size={17} /></a>}
+                {resumeUrl && <div className="resume-actions">
+                  <a className="button button-primary" href={resumeUrl} target="_blank" rel="noreferrer">
+                    <FileText size={17} /> View Resume <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                  <a className="button button-secondary" href={resumeUrl} download="Ryan_M_Dengcong_CV.pdf">
+                    <Download size={17} /> Download CV
+                  </a>
+                </div>}
               </Reveal>
             </div>
             <Reveal className="profile-facts">
